@@ -1,12 +1,14 @@
+import os
+import sys
+
 import requests
 import yaml
-from sys import exit
 from bs4 import BeautifulSoup
-
+from urllib.parse import parse_qsl
 
 def main() -> None:
     config = load_config()
-    get_cheque()
+    process_cheque_files(config['dir'], ext=config['file_ext'])
 
 
 def load_config() -> dict:
@@ -14,9 +16,23 @@ def load_config() -> dict:
         with open('config.yml', 'r') as f:
             config = yaml.load(f)
     except FileNotFoundError:
-        exit('Please create a config file config.yml')
+        sys.exit('Please create a config file config.yml')
 
     return config
+
+
+def process_cheque_files(dir, ext='.txt') -> None:
+    for file in os.listdir(dir):
+        if file.endswith(ext):
+            print(file)
+            params = parse_cheque_file(os.path.join(dir, file))
+            print(params)
+            # get_cheque()
+
+
+def parse_cheque_file(file) -> dict:
+    with open(file, 'r') as txt:
+        return dict(parse_qsl(txt.read()))
 
 
 def get_cheque():
