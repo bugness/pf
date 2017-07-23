@@ -10,10 +10,8 @@ from urllib.parse import parse_qsl
 
 def main() -> None:
     config = load_config()
-    # process_cheque_files(config['dir'], ext=config['file_ext'])
-    db = sqlite3.connect('data.db')
-    # setup_db(db)
-    db.close()
+    process_cheque_files(config['dir'], ext=config['file_ext'])
+    # read_db()
 
 
 def load_config() -> dict:
@@ -46,24 +44,38 @@ def parse_cheque(fn, fp) -> None:
     bs = BeautifulSoup(page.text.encode('utf-8', 'replace'), 'lxml')
     rows = bs.find('div', {'class': 'voucher_check'}).find_all('div', {'class': 'row'})
 
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+
+    item = list()
+
     for row in rows:
         name = row.find('div', {'class': 'col-xs-8'})
-        if not name or name.text not in ['наименование товара', 'Количество', 'общая стоимость позиции с учетом скидок и наценок']:
+        if not name or name.text not in ['наименование товара', 'цена за единицу', 'Количество', 'общая стоимость позиции с учетом скидок и наценок']:
             continue
-        value = row.find('div', {'class': 'col-xs-4'})
-        print(name.text + ': ' + value.text)
+        item.append(row.find('div', {'class': 'col-xs-4'}).text)
+        if len(item) == 4:
+            cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', item)
+            item.clear()
+
+    db.commit()
+    db.close()
 
 
-def setup_db(db) -> None:
-    pass
-    # cursor = db.cursor()
-    # cursor.execute('''CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT, unit_price TEXT, qty TEXT, amount TEXT)''')
-    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 1', '100.00', '1', '100.00'))
-    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 2', '50.00', '2', '100.00'))
-    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 3', '10.00', '1', '10.00'))
-    # cursor.execute('''SELECT * FROM items''')
-    # for item in cursor:
-    #     print(item)
+def setup_db() -> None:
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+    cursor.execute('''CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT, unit_price TEXT, qty TEXT, amount TEXT)''')
+    db.close()
+
+
+def read_db() -> None:
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+    cursor.execute('''SELECT * FROM items''')
+    for item in cursor:
+        print(item)
+    db.close()
 
 
 if __name__ == '__main__':
