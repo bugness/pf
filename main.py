@@ -1,5 +1,6 @@
 import os
 import sys
+import sqlite3
 
 import requests
 import yaml
@@ -9,7 +10,10 @@ from urllib.parse import parse_qsl
 
 def main() -> None:
     config = load_config()
-    process_cheque_files(config['dir'], ext=config['file_ext'])
+    # process_cheque_files(config['dir'], ext=config['file_ext'])
+    db = sqlite3.connect('data.db')
+    # setup_db(db)
+    db.close()
 
 
 def load_config() -> dict:
@@ -48,6 +52,18 @@ def parse_cheque(fn, fp) -> None:
             continue
         value = row.find('div', {'class': 'col-xs-4'})
         print(name.text + ': ' + value.text)
+
+
+def setup_db(db) -> None:
+    pass
+    # cursor = db.cursor()
+    # cursor.execute('''CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT, unit_price TEXT, qty TEXT, amount TEXT)''')
+    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 1', '100.00', '1', '100.00'))
+    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 2', '50.00', '2', '100.00'))
+    # cursor.execute('''INSERT INTO items (name, unit_price, qty, amount) VALUES (?, ?, ?, ?)''', ('test 3', '10.00', '1', '10.00'))
+    # cursor.execute('''SELECT * FROM items''')
+    # for item in cursor:
+    #     print(item)
 
 
 if __name__ == '__main__':
