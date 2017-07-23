@@ -6,6 +6,7 @@ import yaml
 from bs4 import BeautifulSoup
 from urllib.parse import parse_qsl
 
+
 def main() -> None:
     config = load_config()
     process_cheque_files(config['dir'], ext=config['file_ext'])
@@ -27,7 +28,7 @@ def process_cheque_files(dir, ext='.txt') -> None:
             print(file)
             params = parse_cheque_file(os.path.join(dir, file))
             print(params)
-            # get_cheque()
+            parse_cheque(params['fn'], params['fp'])
 
 
 def parse_cheque_file(file) -> dict:
@@ -35,10 +36,10 @@ def parse_cheque_file(file) -> dict:
         return dict(parse_qsl(txt.read()))
 
 
-def get_cheque():
-    page = requests.get('http://localhost:8000/')
+def parse_cheque(fn, fp) -> None:
+    page = requests.get('https://lk.platformaofd.ru/web/noauth/cheque/', params={'fn': fn, 'fp': fp})
 
-    bs = BeautifulSoup(page.text.encode('iso8859-1', 'replace'), 'lxml')
+    bs = BeautifulSoup(page.text.encode('utf-8', 'replace'), 'lxml')
     rows = bs.find('div', {'class': 'voucher_check'}).find_all('div', {'class': 'row'})
 
     for row in rows:
